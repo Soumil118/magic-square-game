@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Square Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1"></script>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
+            background-image: url('galaxy.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 80px;
+            height: 80px;
+            font-size: 24px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: cyan;
+            border: 2px solid cyan;
+            border-radius: 10px;
+            caret-color: transparent;
+        }
+        button {
+            margin-top: 20px;
+            padding: 12px 20px;
+            font-size: 18px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e68900;
+        }
+        #result {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Magic Square Game</h1>
+    <p>Fill the grid with numbers 1-9 (no repeats) and try to make a magic square!</p>
+    <div class="grid" id="grid">
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+        <div class="cell" contenteditable="true" oninput="validateInput(this)"></div>
+    </div>
+    <button onclick="checkMagicSquare()">Check</button>
+    <button onclick="giveHint()">Hint</button>
+    <button onclick="resetGame()">Reset</button>
+    <p id="result"></p>
+
+    <script>
+        const magicSquares = [
+            [8, 1, 6, 3, 5, 7, 4, 9, 2],
+            [6, 1, 8, 7, 5, 3, 2, 9, 4],
+            [4, 9, 2, 3, 5, 7, 8, 1, 6],
+            [2, 9, 4, 7, 5, 3, 6, 1, 8],
+            [8, 3, 4, 1, 5, 9, 6, 7, 2],
+            [4, 3, 8, 9, 5, 1, 2, 7, 6],
+            [6, 7, 2, 1, 5, 9, 8, 3, 4],
+            [2, 7, 6, 9, 5, 1, 4, 3, 8]
+        ];
+
+        function validateInput(cell) {
+            let value = cell.innerText.replace(/[^1-9]/g, '');
+            cell.innerText = value;
+        }
+
+        function checkMagicSquare() {
+            let cells = document.querySelectorAll('.cell');
+            let values = Array.from(cells).map(cell => parseInt(cell.innerText) || 0);
+            
+            if (new Set(values).size !== 9 || values.includes(0)) {
+                document.getElementById('result').innerText = "Use numbers 1-9 without repeats!";
+                return;
+            }
+            
+            let magicSum = 15;
+            let rows = [
+                values[0] + values[1] + values[2],
+                values[3] + values[4] + values[5],
+                values[6] + values[7] + values[8]
+            ];
+            let cols = [
+                values[0] + values[3] + values[6],
+                values[1] + values[4] + values[7],
+                values[2] + values[5] + values[8]
+            ];
+            let diagonals = [
+                values[0] + values[4] + values[8],
+                values[2] + values[4] + values[6]
+            ];
+            
+            if ([...rows, ...cols, ...diagonals].every(sum => sum === magicSum)) {
+                document.getElementById('result').innerText = "🎉 Congratulations! You made a magic square! 🎉";
+                launchConfetti();
+            } else {
+                document.getElementById('result').innerText = "❌ Not a magic square, try again!";
+            }
+        }
+
+        function launchConfetti() {
+            let duration = 3 * 1000; // 3 seconds
+            let end = Date.now() + duration;
+
+            function frame() {
+                confetti({
+                    particleCount: 5,
+                    spread: 70,
+                    origin: { x: Math.random(), y: Math.random() - 0.2 }
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }
+            frame();
+        }
+
+        function giveHint() {
+            let cells = document.querySelectorAll('.cell');
+            let values = Array.from(cells).map(cell => parseInt(cell.innerText) || 0);
+
+            let correctSquare = magicSquares[0]; // Using the first magic square as reference
+            for (let i = 0; i < values.length; i++) {
+                if (values[i] !== correctSquare[i]) {
+                    cells[i].innerText = correctSquare[i]; // Provide a correct number
+                    document.getElementById('result').innerText = "Hint given!";
+                    return;
+                }
+            }
+            document.getElementById('result').innerText = "No hint needed! You might already be correct!";
+        }
+
+        function resetGame() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.innerText = ''; // Clear cell content
+            });
+            document.getElementById('result').innerText = ''; // Clear result message
+        }
+    </script>
+</body>
+</html>
